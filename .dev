@@ -1,0 +1,239 @@
+### Melhorias
+- OK - Website cadastro de configs ( User, Senha e SiteMap )
+- OK - Website criar asossiação de Sources
+- OK - Tabelas com dataTable ( filtrar e paginação )
+- OK - Coniguração de Website / Sources ( Reescrita S/N ), ( Status Default de post ), ( Citação Sim / Sim com Link / Nao )
+- OK - Ajustar comando de reescrita usando parametro ( Reescrita S/N  )
+- OK - Testes de IA GPT
+- OK - Novos campos na edição de FONTE, para padrão de template
+- OK - Unificar comando de SourceFetch ( WP e CUSTOM ) 
+- OK - Testar se existir menos de 2 posts status=0 RODA, senao PULA
+- OK - Adicionar a rewrited de tudo por API (OpenAi) / Remover Ollama.
+- OK - Remove optimizeContent() (com sitemap e strong) do PublishService e tras para o ProssService.
+- Filtros de busca nas telas
+- modal para editar config de website/fonte
+- Mostrar os arquivos de log
+- Melhorias de front
+- Ajustar titulo de pagina na Header
+- Contabilizar erros de SOURCE para inativa-los após X ocorrencias
+- Rever todos os fluxos de comandos ( TryCatch ) para identificar erros e aproveita-los p corrigir fluxo
+- Link final do post publicado ( tabela ja ta pronta )
+- Descobrir maldito problema de publicar imagem pelos servidores
+- Trocar chamadas CURL por guzzle com service de WebRequest
+- Definir Templates de crawler baseado no tipo do site
+- Source com campos para regras gerais e de crawler
+- Criar uma coluna na tabela de cada SITE FONTE, com palavras para exclusão (strReplace) e trocar no méthodo dp PostFetchService
+
+-- LOCAL http://wp-base.loc {"wpPass": "BonaWp2025$", "wpUser": "Bonanho", "siteMap": "wp-sitemap.xml"} // wp-sitemap-posts-post-1.xml ?
+
+CQCS ( estes apesar de passar no validate dão erro )
+-- UPDATE sources SET doc = '{"erro": "Erro no source fetch"}', status_id = -2 WHERE id IN (5,17,23);
+-- UPDATE sources SET doc = '{"erro": "Erro no source fetch DATA"}', status_id = -2 WHERE id IN (24);
+
+### Server
+hetz - bonanho - Dv?LXJ_+gLp6.4J
+
+### DB-PROD ###
+DB_HOST=168.231.95.107
+DB_DATABASE=db_cqcs
+DB_USERNAME=devs
+DB_PASSWORD=Devs@2025?!
+
+### Ollama
+https://ollama.com/download/linux
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Após instalação rodar isso para baixar o gemma3
+https://ollama.com/library/gemma3
+ollama run gemma3 
+
+# Esta também é boa mas nao estamos usando no projeto
+https://ollama.com/library/mistral 
+
+ollama run gemma3
+CTRL + D ( sair )
+
+### CQCS WP teste 
+https://g.mediagrumft.com/wp-admin/ - ( grumft - grumft )
+cqcs@mediagrumft.com
+AfXS!0re2ZN^m6R@F$qFyrCt
+
+### Instalação
+php artisan migrate
+*** Mudar na tabela migrations "2025_08_13_000002_create_initials_table" para 2
+php artisan db:seed --class=InitialSeeder ( User:super@user.com - Pass:super@123 )
+php artisan db:seed --class=CqcsSeeder
+
+### Comandos
+php artisan source:validate -- Valida (basicamente) os sources da CQCS e ativa ou não o SOURCE, tambem define WP ou Custom
+php artisan source:fetch    -- Busca posts nos sites fonte
+php artisan post:queue      -- Monta fila de posts Website / Source 
+php artisan post:process    -- Cópia ou Reescritas de IA ambas usam SEO
+php artisan post:publish    -- Define Categoria, Sobe Imagem, Add Autor/Link, Publica, Update metaRankMath
+
+### Cron
+0 * * * * php /var/www/html/cqcs-dash/artisan source:fetch >> /tmp/cqcs_source-fetch
+10 * * * * php /var/www/html/cqcs-dash/artisan post:queue >> /tmp/cqcs_post-queue
+15 * * * * php /var/www/html/cqcs-dash/artisan post:process >> /tmp/cqcs_post-process
+*/10 * * * * php /var/www/html/cqcs-dash/artisan post:publish --limit >> /tmp/cqcs_post-publish
+
+### NGINX 
+server{
+    listen 80;
+
+    server_name abf-dash.loc;
+
+    root /home/bonanho/Works/Abf/abf-dash/public;
+    index index.php index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+    }
+}
+
+Estadão
+https://www.estadao.com.br/economia/negocios - .news-container a
+https://www.estadao.com.br/busca/?token=%257B%2522query%2522%253A%2522seguradora%2522%257D - .element content a
+
+
+
+
+### Fontes CQCS
+Sites que precisamos reescrever
+Estadao
+Valor econômico 
+Sonho Seguro
+
+
+Sites e palavras que costumamos clipar:
+Seguem palavras e sites para clipar:
+Mercado de seguro 
+Mercado segurador
+setor de seguros
+setor segurador
+Susep
+Seguro
+Seguros
+Segurado
+Segurados
+Detran
+Seguro Saude
+Seguradora
+Seguradoras
+DPVAT
+Sinistro
+Apolice
+Golpe do Seguro
+Corretor
+PrevidÍncia privada
+Seguro pirata
+
+$keywords = [
+    "mercado de seguro",
+    "mercado segurador",
+    "regulador de seguro",
+    "setor de seguro",
+    "seguro saúde",
+    "seguro de saúde",
+    "seguro de automóvel",
+    "seguro residencia",
+    "seguro de vida",
+    "seguradora",
+    "corretor de seguros",
+    "apólice de seguro",
+    "sinistro de seguro",
+    "golpe do seguro",
+    "previdência privada",
+    "seguro pirata",
+    "susep",
+    "dpvat",
+    "detra"
+];
+
+Di·rio oficial
+http://www.seguros.inf.br/index.php
+
+* CNseg - http://www.cnseg.org.br/cnseg/home.html
+
+* Susep - http://www.susep.gov.br/
+
+* Fenacor - http://www.fenacor.com.br/
+
+* Escola Nacional de Seguros - http://www.funenseg.org.br/
+
+* Câmara dos Deputados - http://www2.camara.leg.br/camaranoticias/
+
+* ANS - http://www.ans.gov.br/
+
+* Revista ApÛlice - http://revistaapolice.com.br/
+
+* Revista Cobertura - http://www.revistacobertura.com.br
+
+* Monitor Mercantil - http://www.monitormercantil.com.br/
+
+* Exame - http://exame.abril.com.br/
+
+* …poca - http://epoca.globo.com/
+
+* Estad„o - http://www.estadao.com.br/
+
+* Folha - http://www.folha.com.br/
+
+* O Globo - http://oglobo.globo.com/
+
+* Jornal do ComÈrcio - http://jcrs.uol.com.br/
+
+* Zero Hora - http://zh.clicrbs.com.br/rs/
+
+* Correio do Povo - http://www.correiodopovo.com.br/
+
+* Di·rio Oficial da Uni„o - http://portal.in.gov.br/
+
+Sindseg-SP http://www.sindsegsp.org.br/site/
+
+Sincor-SP  http://www.sincor.org.br/
+
+SindMG - https://sindsegmd.com.br/
+
+https://capitolio.com.br
+
+Sindseg RS - http://www.sindsegrs.com.br/
+Sincor RS - http://www.sincorrs.com/
+http://www.seguros.inf.br/
+http://sulamerica.comunique-se.com.br/sulamerica/
+http://riscosegurobrasil.com/
+
+http://www.praqueseguro.com.br/2018/01/o-chato-do-corretor.html
+
+
+
+
+
+php artisan source:fetch    -- Somente a busca e checkagem de NOVAS MATERIAS Salvando apenas o basico
+php artisan post:queue      -- Monta fila de posts Website / Source ( 3 w com mesma materia da CNN )
+php artisan post:process    -- Chama a IA e reescreve a mesma materia de forma diferente ( Temp ) para 3 Websites
+
+
+WEBSITE
+    - CLIQUE F
+    - ALERTA J
+    - BONA N 
+FONTE
+    - CNN
+
+
+### DB-PROD ###
+# DB_HOST=168.231.95.107
+# DB_DATABASE=db_cqcs
+# DB_USERNAME=devs
+# DB_PASSWORD=Devs@2025?!
+
+mysqldump -h 168.231.95.107 -u devs -p db_cqcs > db_cqcs_2025-10-29.sql
+mysql -u root -p cqcs_dash < db_cqcs_2025-10-29.sql
+
+UPDATE `cqcs_dash`.`websites` SET `url` = 'http://wp-base.loc', `config` = '{"wpPass": "BonaWp2025$", "wpUser": "Bonanho", "siteMap": "wp-sitemap-posts-post-1.xml"}' WHERE (`id` = '1');
