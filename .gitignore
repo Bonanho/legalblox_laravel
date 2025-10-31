@@ -24,3 +24,5 @@ Homestead.yaml
 Thumbs.db
 
 .dev
+/_back
+/_front
