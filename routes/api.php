@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 
 // Todas as rotas estarão sob /api/v1/ (apiPrefix configurado no bootstrap/app.php)
-Route::prefix('users')->group(function () 
+Route::prefix('users')->middleware('keycloak.auth')->group(function () 
 {
     // Rotas de autenticação para o usuário logado
     Route::prefix('me')->group(function () {
