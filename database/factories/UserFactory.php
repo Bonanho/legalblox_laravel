@@ -29,9 +29,12 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'id_user_keycloak' => null,
+            'id_tenant_keycloak' => null,
             'is_active' => true,
             'is_superuser' => false,
             'is_org_superuser' => false,
+            'organization_id' => null,
         ];
     }
     
