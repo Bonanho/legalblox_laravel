@@ -94,14 +94,20 @@ class KeycloakAuthMiddleware
             return $next($request);
 
         } catch (\Exception $e) {
-            Log::error('Keycloak authentication error: ' . $e->getMessage(), [
-                'exception' => $e,
-                'request_path' => $request->path()
+            Log::error('Keycloak authentication error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'request_path' => $request->path(),
+                'request_method' => $request->method(),
+                'has_token' => !empty($this->extractToken($request)),
             ]);
 
             return response()->json([
                 'error' => 'Erro de autenticação',
-                'detail' => 'Não foi possível validar as credenciais'
+                'detail' => 'Não foi possível validar as credenciais',
+                'message' => config('app.debug') ? $e->getMessage() : null,
             ], 401);
         }
     }
@@ -187,10 +193,10 @@ class KeycloakAuthMiddleware
             $updateFields[] = 'id_user_keycloak';
         }
 
-        if ($user->name !== $userData['name'] && !empty($userData['name'])) {
-            $user->name = $userData['name'];
+        if ($user->nm_full_name !== $userData['name'] && !empty($userData['name'])) {
+            $user->nm_full_name = $userData['name'];
             $needsUpdate = true;
-            $updateFields[] = 'name';
+            $updateFields[] = 'nm_full_name';
         }
 
         if ($needsUpdate) {

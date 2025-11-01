@@ -62,7 +62,7 @@ class User extends Authenticatable
         // Cria instância e define propriedades explicitamente
         $user = new self();
         $user->email = $userData['email'];
-        $user->name = $userData['name'] ?? '';
+        $user->nm_full_name = $userData['name'] ?? '';
         $user->id_user_keycloak = $userData['keycloak_user_id'];
         $user->is_active = true;
         $user->is_superuser = $userData['is_superuser'] ?? false;
@@ -95,7 +95,7 @@ class User extends Authenticatable
         // Cria instância e define propriedades explicitamente
         $user = new self();
         $user->email = $userData['email'];
-        $user->name = $userData['name'] ?? '';
+        $user->nm_full_name = $userData['name'] ?? '';
         $user->password = \Illuminate\Support\Facades\Hash::make($userData['password']);
         $user->is_active = $userData['is_active'] ?? true;
         $user->is_superuser = $userData['is_superuser'] ?? false;
@@ -150,7 +150,7 @@ class User extends Authenticatable
             $this->email = $adminData['email'];
         }
         if (isset($adminData['name'])) {
-            $this->name = $adminData['name'];
+            $this->nm_full_name = $adminData['name'];
         }
         if (isset($adminData['organization_id'])) {
             $this->organization_id = $adminData['organization_id'];

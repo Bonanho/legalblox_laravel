@@ -26,23 +26,46 @@ class KeycloakService
         $config = config('keycloak');
         
         try {
+            // Use internal_server_url for backend-to-keycloak communication (same as Python)
+            $keycloakUrl = $config['internal_server_url'] ?? $config['server_url'];
+            
             Log::debug('Validating token with Keycloak...', [
-                'keycloak_url' => $config['server_url']
+                'keycloak_url' => $keycloakUrl,
+                'realm' => $config['realm'],
+                'client_id' => $config['client_id'],
             ]);
 
-            $response = Http::asForm()->post(
-                $config['server_url'] . '/realms/' . $config['realm'] . '/protocol/openid-connect/token/introspect',
-                [
-                    'token' => $token,
-                    'client_id' => $config['client_id'],
-                    'client_secret' => $config['client_secret'],
-                ]
-            );
+            // Build URL correctly (remove duplicate slashes)
+            $baseUrl = rtrim($keycloakUrl, '/');
+            $realm = $config['realm'];
+            $introspectUrl = $baseUrl . '/realms/' . $realm . '/protocol/openid-connect/token/introspect';
+
+            Log::debug('Sending introspection request', [
+                'url' => $introspectUrl,
+                'client_id' => $config['client_id'],
+                'token_preview' => substr($token, 0, 50) . '...',
+            ]);
+
+            $response = Http::asForm()
+                ->withBasicAuth($config['client_id'], $config['client_secret'])
+                ->timeout(10)
+                ->post(
+                    $introspectUrl,
+                    [
+                        'token' => $token,
+                    ]
+                );
 
             if (!$response->successful()) {
                 Log::warning('Keycloak introspection failed', [
                     'status' => $response->status(),
-                    'response' => $response->body()
+                    'status_text' => $response->statusText(),
+                    'response_body' => $response->body(),
+                    'response_headers' => $response->headers(),
+                    'request_url' => $introspectUrl,
+                    'client_id' => $config['client_id'],
+                    'has_client_secret' => !empty($config['client_secret']),
+                    'client_secret_length' => strlen($config['client_secret'] ?? ''),
                 ]);
                 return null;
             }
@@ -51,14 +74,33 @@ class KeycloakService
 
             // Verificar se o token está ativo
             if (!isset($tokenInfo['active']) || !$tokenInfo['active']) {
-                Log::warning('Token validation failed: token is not active or has expired');
+                Log::warning('Token validation failed: token is not active or has expired', [
+                    'token_info' => $tokenInfo,
+                ]);
                 return null;
             }
+            
+            Log::debug('Token introspected successfully', [
+                'token_active' => $tokenInfo['active'],
+                'email' => $tokenInfo['email'] ?? 'not_set',
+                'sub' => $tokenInfo['sub'] ?? 'not_set',
+            ]);
 
             return $tokenInfo;
 
         } catch (\Exception $e) {
-            Log::error('Error validating token with Keycloak: ' . $e->getMessage());
+            Log::error('Error validating token with Keycloak', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'config' => [
+                    'keycloak_url' => $keycloakUrl ?? 'not_set',
+                    'realm' => $config['realm'] ?? 'not_set',
+                    'client_id' => $config['client_id'] ?? 'not_set',
+                    'has_secret' => !empty($config['client_secret']),
+                ]
+            ]);
             return null;
         }
     }
