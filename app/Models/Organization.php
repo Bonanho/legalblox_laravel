@@ -58,19 +58,19 @@ class Organization extends Model
 
     // Constantes para Status
     const STATUS_INACTIVE = 0;
-    const STATUS_ACTIVE = 1;
-    const STATUS_SANDBOX = 2;
+    const STATUS_ACTIVE   = 1;
+    const STATUS_SANDBOX  = 2;
     const STATUS = [
         self::STATUS_INACTIVE => "Inativo",
-        self::STATUS_ACTIVE => "Ativo",
-        self::STATUS_SANDBOX => "Sandbox"
+        self::STATUS_ACTIVE   => "Ativo",
+        self::STATUS_SANDBOX  => "Sandbox"
     ];
 
     // Constantes para Tipo
-    const TYPE_CORP = 1;
+    const TYPE_CORP   = 1;
     const TYPE_RETAIL = 2;
-    const TYPE = [
-        self::TYPE_CORP => "Corporativo",
+    const TYPE        = [
+        self::TYPE_CORP   => "Corp",
         self::TYPE_RETAIL => "Varejo"
     ];
 
