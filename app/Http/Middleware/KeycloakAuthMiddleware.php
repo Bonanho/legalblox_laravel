@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\Response;
  * - Sincroniza roles e organização do Keycloak com o banco local
  * - Realiza JIT provisioning para novos usuários
  * - Suporta modo debug para superusuários
+ * - Modo DEV: bypassa Keycloak completamente quando KEYCLOAK_DEV_MODE=true
  */
 class KeycloakAuthMiddleware
 {
@@ -45,6 +46,36 @@ class KeycloakAuthMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // DEV MODE: Bypass completo do Keycloak
+        if ($this->shouldUseDevMode()) {
+            $user = $this->getDevUser($request);
+            
+            if (!$user) {
+                return response()->json([
+                    'error' => 'Usuário DEV não encontrado',
+                    'detail' => 'Passe o header X-Dev-User-Email ou X-Dev-User-Id',
+                    'hint' => 'Exemplo: X-Dev-User-Email: usuario@example.com'
+                ], 401);
+            }
+            
+            if (!$user->is_active) {
+                return response()->json([
+                    'error' => 'Usuário inativo',
+                    'detail' => 'Conta de usuário está inativa'
+                ], 401);
+            }
+            
+            Auth::setUser($user);
+            $request->setUserResolver(fn() => $user);
+            
+            Log::info('DEV MODE: User authenticated', [
+                'email' => $user->email,
+                'id' => $user->id
+            ]);
+            
+            return $next($request);
+        }
+
         try {
             // 1. Extrair token do header Authorization
             $token = $this->extractToken($request);
@@ -214,6 +245,47 @@ class KeycloakAuthMiddleware
             'is_org_superuser' => $user->is_org_superuser,
             'organization_id' => $user->organization_id
         ]);
+    }
+
+    /**
+     * Verifica se o modo DEV está habilitado e permitido
+     * 
+     * @return bool
+     */
+    private function shouldUseDevMode(): bool
+    {
+        $devMode = env('KEYCLOAK_DEV_MODE', false);
+        $appEnv = config('app.env', 'production');
+        
+        // NUNCA permitir em produção
+        if ($appEnv === 'production' || $appEnv === 'prod') {
+            return false;
+        }
+        
+        return $devMode && in_array($appEnv, ['local', 'homolog']);
+    }
+
+    /**
+     * Obtém usuário em modo DEV
+     * Utiliza USER ID definido na propria env(KEYCLOAK_DEV_MODE):
+     * 
+     * @param Request $request
+     * @return User|null
+     */
+    private function getDevUser(Request $request): ?User
+    {
+        $userId = env('KEYCLOAK_DEV_MODE', false);
+        if ($userId) {
+            $user = User::where('id', $userId)->first();
+            if ($user) {
+                Log::debug('DEV MODE: Using user from KEYCLOAK_DEV_MODE', ['id' => $userId]);
+                return $user;
+            }
+            Log::warning('DEV MODE: User not found by id', ['id' => $userId]);
+            return null;
+        }
+
+        return null;
     }
 }
 

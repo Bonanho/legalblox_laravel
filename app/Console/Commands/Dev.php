@@ -4,18 +4,18 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 
-use App\Models\Users;
+use App\Models\User;
 
-class MigrationDB extends Command
+class Dev extends Command
 {
     
-    protected $signature = 'db:migration';
+    protected $signature = 'dev:test';
 
     protected $description = 'Command description';
 
     public function handle()
     {
-        $users = Users::all();
+        $users = User::find(86);
 
         $teste = [
             'server_url'          => env('KEYCLOAK_SERVER_URL', 'http://localhost:8080'),
@@ -25,6 +25,6 @@ class MigrationDB extends Command
             'client_secret'       => env('KEYCLOAK_CLIENT_SECRET_KEY', env('KEYCLOAK_CLIENT_SECRET', '')),
             'allow_mock_user_switching' => env('KEYCLOAK_ALLOW_MOCK_USER_SWITCHING', false),
         ];
-        dd( $teste );
+        dd( $users, $teste );
     }
 }

@@ -20,6 +20,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'hashed_password'
     ];
 
     /**
@@ -36,6 +37,12 @@ class User extends Authenticatable
             'is_superuser' => 'boolean',
             'is_org_superuser' => 'boolean',
         ];
+    }
+
+    ####################
+    ### RELATIONSHIP ###
+    public function Organization () {
+        return $this->belongsTo(Organization::class, 'organization_id', 'organization_id');
     }
 
     ###############

@@ -16,14 +16,16 @@ class UserController extends Controller
      * GET /api/v1/users/me
      */
     public function me(Request $request): JsonResponse
-    {
+    {#Bona-CHECK
         $user = Auth::user();
         
-        // TODO: Adicionar lógica de organization_type_info similar ao FastAPI
-        // if ($org_type_info) {
-        //     $user->organization_type = $org_type_info['name'];
-        // }
-        
+        $user->display_name = $user->nm_full_name;
+        $user->organization_type = $user->Organization->getType();
+        $user->full_phone_number = null;
+
+        $user->makeHidden('Organization');
+        // $user->unsetRelation('Organization');
+
         return response()->json($user);
     }
 
@@ -32,20 +34,19 @@ class UserController extends Controller
      * GET /api/v1/users/me/profile
      */
     public function getProfile(Request $request): JsonResponse
-    {
+    {#Bona-CHECK
         $user = Auth::user();
-        
-        // TODO: Buscar dados da organização
-        // $org = Organization::where('organization_id', $user->organization_id)->first();
-        
+
         return response()->json([
-            'id' => $user->id,
-            'email' => $user->email,
-            // 'organization_id' => $org->organization_id ?? null,
-            // 'organization_name' => $org->ds_nome_razao_social ?? null,
-            'display_name' => $user->name ?? null,
-            'nm_full_name' => $user->name ?? null,
-            // Adicionar outros campos conforme necessário
+            'id'                 => $user->id,
+            'email'              => $user->email,
+            'nm_full_name'       => $user->nm_full_name,
+            'nm_telefone_pais'   => $user->nm_telefone_pais,
+            'nm_telefone_ddd'    => $user->nm_telefone_ddd,
+            'nm_telefone_numero' => $user->nm_telefone_numero,
+            'nu_cpf'             => $user->nu_cpf,
+            'organization_id'    => $user->organization_id,
+            'organization_name'  => $user->Organization->ds_nome_fantasia,
         ]);
     }
 

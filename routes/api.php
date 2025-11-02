@@ -30,7 +30,8 @@ Route::prefix('users')->middleware('keycloak.auth')->group(function ()
 });
 
 // Rotas de organizações
-Route::prefix('organizations')->middleware('keycloak.auth')->group(function () {
+Route::prefix('organizations')->middleware('keycloak.auth')->group(function () 
+{
     // Rotas CRUD de organizações
     Route::get('/', [OrganizationController::class, 'index']); // GET /api/v1/organizations
     Route::get('/current', [OrganizationController::class, 'current']); // GET /api/v1/organizations/current
